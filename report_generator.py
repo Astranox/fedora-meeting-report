@@ -10,15 +10,15 @@ import argparse
 import sys
 
 SORT_MAP = {
-        'urgent': 1,
-        'high': 2,
-        'medium': 3,
-        'low': 4,
-        'unspecified': 4,
-        'NEW': 1,
-        'ASSIGNED': 2,
-        'MODIFIED': 3,
-        'ON_QA': 4
+        'urgent': '1',
+        'high': '2',
+        'medium': '3',
+        'low': '4',
+        'unspecified': '4',
+        'NEW': '1',
+        'ASSIGNED': '2',
+        'MODIFIED': '3',
+        'ON_QA': '4'
         }
 
 TABLES = [
@@ -91,9 +91,6 @@ def save_table(rows, attribute, conn, table):
 def draw_table(table, rows, limit=None, previous=False):
     label = table[1]
 
-    if limit is not None:
-        rows = rows[0:limit]
-
     # sort to first column
     def sort_key(key):
         if key in SORT_MAP:
@@ -103,6 +100,9 @@ def draw_table(table, rows, limit=None, previous=False):
         rows = sorted(rows, key=lambda t: int(t[1]), reverse=True)
     else:
         rows = sorted(rows, key=lambda t: sort_key(t[0]))
+
+    if limit is not None:
+        rows = rows[0:limit]
 
     if previous:
         headers = [label, 'Tickets (delta)', 'Owned (delta)', 'Unowned (delta)']
