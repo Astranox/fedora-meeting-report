@@ -2,21 +2,21 @@
 
 I whipped up this script to build reports for the Fedora Security Team meetings, but it could be adatped easily to fit the needs of other groups that use Bugzilla as their ticketing system.
 
-Python 2.7 or 3.1+ is required for collections.Counter to work.
+Should work on Python 3.4+.
 
 ### Install Prerequisites
 
-The script only needs a few python packages:
+The script needs terminaltables, python-bugzilla, parsedatetime, SQLAlchemy and requests to work:
 
-    pip install terminaltables python-bugzilla parsedatetime SQLAlchemy
+    pip3 install -r requirements.txt
 
 ### Running the script
 
 Simply run the script:
 
-    python report_generator.py
+    python3 report_generator.py
 
-    python report_generator.py [--help] [--cron | --fetch | --date DATE]
+    python3 report_generator.py [--help] [--cron | --fetch | --date DATE]
 
 ### Sample output
 

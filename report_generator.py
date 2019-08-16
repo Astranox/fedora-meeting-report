@@ -3,7 +3,7 @@ from bugzilla import Bugzilla
 from collections import Counter
 from datetime import datetime, date
 from time import mktime
-from terminaltables import SingleTable
+from terminaltables import SingleTable, AsciiTable
 from sqlalchemy import create_engine, func, and_, select, Table, Column, Integer, String, Date, MetaData
 import parsedatetime
 import argparse
@@ -55,6 +55,7 @@ def build_table(bugs, attribute):
         owned[category] = freq
 
     # Let's build rows for the table
+    # TODO: build custom sorter (e.g. urgent < high < medium < low < unspecified, or NEW < ASSIGNED < MODIFIED < ON_QA
     rows = []
     for category, total in sorted(frequency.items(), key=lambda t: t[1],
                                  reverse=True):
@@ -85,8 +86,12 @@ def draw_table(rows, label, limit=None, previous=False):
     else:
         headers = [label, 'Tickets', 'Owned', 'Unowned']
     # Generate the table
-    return SingleTable(table_data=[headers]+rows,
-                     title="Tickets by {0}".format(label)).table
+    if sys.stdout.isatty():
+        return SingleTable(table_data=[headers]+rows,
+                title="Tickets by {0}".format(label)).table
+    else:
+        return AsciiTable(table_data=[headers]+rows,
+                title="Tickets by {0}".format(label)).table
 
 def draw_header(datadate):
     # Build Report
