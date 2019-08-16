@@ -9,6 +9,18 @@ import parsedatetime
 import argparse
 import sys
 
+SORT_MAP = {
+        'urgent': 1,
+        'high': 2,
+        'medium': 3,
+        'low': 4,
+        'unspecified': 4,
+        'NEW': 1,
+        'ASSIGNED': 2,
+        'MODIFIED': 3,
+        'ON_QA': 4
+        }
+
 TABLES = [
         ('priority', 'Priority'),
         ('status', 'Status'),
@@ -55,10 +67,8 @@ def build_table(bugs, attribute):
         owned[category] = freq
 
     # Let's build rows for the table
-    # TODO: build custom sorter (e.g. urgent < high < medium < low < unspecified, or NEW < ASSIGNED < MODIFIED < ON_QA
     rows = []
-    for category, total in sorted(frequency.items(), key=lambda t: t[1],
-                                 reverse=True):
+    for category, total in frequency.items():
         row = [
             category,
             str(total),
@@ -77,9 +87,17 @@ def save_table(rows, attribute, conn, table):
         tupels.append(dict(zip(fields, line)))
     conn.execute(bugtable.insert(), tupels)
 
+
 def draw_table(rows, label, limit=None, previous=False):
     if limit is not None:
         rows = rows[0:limit]
+
+    # sort to first column
+    def sort_key(key):
+        if key in SORT_MAP:
+            return SORT_MAP[key]
+        return key
+    rows = sorted(rows, key=lambda t: sort_key(t[0]))
 
     if previous:
         headers = [label, 'Tickets (delta)', 'Owned (delta)', 'Unowned (delta)']
@@ -161,6 +179,7 @@ if __name__ == '__main__':
         for table in TABLES:
             rows = build_table(bugs, table[0])
             print(draw_table(rows, table[1], 10))
+            print()
 
     else:
         """ Get data from specific date """
@@ -180,6 +199,7 @@ if __name__ == '__main__':
             for elem in conn.execute(sel).fetchall():
                 rows.append([elem[0], str(elem[1]+elem[2]), str(elem[1]), str(elem[2])])
             print(draw_table(rows, table[1], 10))
+            print()
 
     if conn is not None:
         conn.close()
