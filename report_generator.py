@@ -3,7 +3,7 @@ from bugzilla import Bugzilla
 from collections import Counter
 from datetime import datetime, date
 from time import mktime
-from terminaltables import UnixTable
+from terminaltables import SingleTable
 from sqlalchemy import create_engine, func, and_, select, Table, Column, Integer, String, Date, MetaData
 import parsedatetime
 import argparse
@@ -76,13 +76,16 @@ def save_table(rows, attribute, conn, table):
         tupels.append(dict(zip(fields, line)))
     conn.execute(bugtable.insert(), tupels)
 
-def draw_table(rows, label, limit=None):
+def draw_table(rows, label, limit=None, previous=False):
     if limit is not None:
         rows = rows[0:limit]
 
-    headers = [[label, 'Tickets', 'Owned', 'Unowned']]
+    if previous:
+        headers = [label, 'Tickets (delta)', 'Owned (delta)', 'Unowned (delta)']
+    else:
+        headers = [label, 'Tickets', 'Owned', 'Unowned']
     # Generate the table
-    return UnixTable(table_data=headers+rows,
+    return SingleTable(table_data=[headers]+rows,
                      title="Tickets by {0}".format(label)).table
 
 def draw_header(datadate):
@@ -104,6 +107,7 @@ if __name__ == '__main__':
     group.add_argument('-c', '--cron', action='store_true', help='fetch and store data from bugzilla')
     group.add_argument('-f', '--fetch', action='store_true', help='fetch report from bugzilla')
     group.add_argument('-d', '--date', nargs=1, default=None, help='show tables from specified date (e.g. "2 days ago", "today" or "2015-09-01")')
+    parser.add_argument('--show-delta-days', type=int, help='show difference to N days before')
     args = parser.parse_args()
 
     if not args.cron and args.date is None:
@@ -116,13 +120,13 @@ if __name__ == '__main__':
         try:
             # parse dates like "2015-09-01"
             readdate = datetime.strptime(datestr, "%Y-%m-%d").date()
-        except ValueError, e:
+        except ValueError as e:
             try:
                 # parse all human readable dates
                 cal = parsedatetime.Calendar()
                 time_struct, parse_status = cal.parse(datestr)
                 readdate = datetime.fromtimestamp(mktime(time_struct)).date()
-            except ValueError, e:
+            except ValueError as e:
                 parser.error("could not parse specified date.")
     curdate = date.today()
 
@@ -141,21 +145,21 @@ if __name__ == '__main__':
                 # Store data
                 save_table(rows, table[0], conn, bugtable)
         else:
-            print "Data has been stored already."
+            print("Data has been stored already.")
             sys.exit(1)
 
     elif args.fetch:
         """ Fetching live data from Bugzilla """
-        print draw_header(datadate=date.today())
+        print(draw_header(datadate=date.today()))
         # Gather data
         bugs = get_security_bugs()
         for table in TABLES:
             rows = build_table(bugs, table[0])
-            print draw_table(rows, table[1], 10)
+            print(draw_table(rows, table[1], 10))
 
     else:
         """ Get data from specific date """
-        print draw_header(datadate=readdate)
+        print(draw_header(datadate=readdate))
 
         for table in TABLES:
             # fetch db table from $readdate
@@ -170,7 +174,7 @@ if __name__ == '__main__':
                             )
             for elem in conn.execute(sel).fetchall():
                 rows.append([elem[0], str(elem[1]+elem[2]), str(elem[1]), str(elem[2])])
-            print draw_table(rows, table[1], 10)
+            print(draw_table(rows, table[1], 10))
 
     if conn is not None:
         conn.close()
