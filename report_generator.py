@@ -88,7 +88,9 @@ def save_table(rows, attribute, conn, table):
     conn.execute(bugtable.insert(), tupels)
 
 
-def draw_table(rows, label, limit=None, previous=False):
+def draw_table(table, rows, limit=None, previous=False):
+    label = table[1]
+
     if limit is not None:
         rows = rows[0:limit]
 
@@ -97,7 +99,10 @@ def draw_table(rows, label, limit=None, previous=False):
         if key in SORT_MAP:
             return SORT_MAP[key]
         return key
-    rows = sorted(rows, key=lambda t: sort_key(t[0]))
+    if table[0] == 'component':
+        rows = sorted(rows, key=lambda t: int(t[1]), reverse=True)
+    else:
+        rows = sorted(rows, key=lambda t: sort_key(t[0]))
 
     if previous:
         headers = [label, 'Tickets (delta)', 'Owned (delta)', 'Unowned (delta)']
@@ -178,7 +183,7 @@ if __name__ == '__main__':
         bugs = get_security_bugs()
         for table in TABLES:
             rows = build_table(bugs, table[0])
-            print(draw_table(rows, table[1], 10))
+            print(draw_table(table, rows, 10))
             print()
 
     else:
@@ -189,7 +194,7 @@ if __name__ == '__main__':
             # fetch db table from $readdate
             rows = []
             sel = select(
-                    [bugtable.c.category,bugtable.c.owned, bugtable.c.unowned]
+                    [bugtable.c.category, bugtable.c.owned, bugtable.c.unowned]
                     ).where(
                             and_(
                                 bugtable.c.date == readdate,
@@ -198,7 +203,7 @@ if __name__ == '__main__':
                             )
             for elem in conn.execute(sel).fetchall():
                 rows.append([elem[0], str(elem[1]+elem[2]), str(elem[1]), str(elem[2])])
-            print(draw_table(rows, table[1], 10))
+            print(draw_table(table, rows, 10))
             print()
 
     if conn is not None:
