@@ -122,12 +122,13 @@ def draw_header(datadate):
     datestring = datetime.now().isoformat(' ')
     datastring = datadate.isoformat()
     return (
-        r" __           _\n"
-        r"/ _|  ___  __| | ___  _ __ __ _\n"
-        r"| |_ / _ \/ _` |/ _ \| '__/ _` |  Fedora Security Team Report\n"
-        r"|  _|  __/ (_| | (_) | | | (_| |  Report date: {0}\n"
-        r"|_|  \___|\__,_|\___/|_|  \__,_|  Data from: {1}\n"
-        r"-------------------------------------------------------------------------------\n"
+        r""" __           _
+/ _|  ___  __| | ___  _ __ __ _
+| |_ / _ \/ _` |/ _ \| '__/ _` |  Fedora Security Team Report
+|  _|  __/ (_| | (_) | | | (_| |  Report date: {0}
+|_|  \___|\__,_|\___/|_|  \__,_|  Data from: {1}
+-------------------------------------------------------------------------------
+"""
     ).format(datestring, datastring)
 
 if __name__ == '__main__':
