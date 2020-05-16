@@ -211,7 +211,11 @@ if __name__ == '__main__':
                     )
             for elem in conn.execute(sel).fetchall():
                 rows.append([elem[0], str(elem[1]+elem[2]), str(elem[1]), str(elem[2])])
-            print(draw_table(table, rows, 10))
+            if table[0] == 'component':
+                # the component table should only show the top 10 versions
+                print(draw_table(table, rows, 10))
+            else:
+                print(draw_table(table, rows))
             print()
 
     if conn is not None:
