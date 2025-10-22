@@ -225,4 +225,5 @@ if __name__ == '__main__':
             print()
 
     if conn is not None:
+        conn.commit()
         conn.close()
