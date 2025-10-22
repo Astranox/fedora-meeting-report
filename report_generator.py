@@ -11,24 +11,24 @@ from sqlalchemy import Table, Column, Integer, String, Date, MetaData
 from sqlalchemy import create_engine, func, and_, select
 
 SORT_MAP = {
-        'urgent': '1',
-        'high': '2',
-        'medium': '3',
-        'low': '4',
-        'unspecified': '4',
-        'NEW': '1',
-        'ASSIGNED': '2',
-        'MODIFIED': '3',
-        'ON_QA': '4'
-        }
+    'urgent': '1',
+    'high': '2',
+    'medium': '3',
+    'low': '4',
+    'unspecified': '4',
+    'NEW': '1',
+    'ASSIGNED': '2',
+    'MODIFIED': '3',
+    'ON_QA': '4'
+}
 
 TABLES = [
-        ('priority', 'Priority'),
-        ('status', 'Status'),
-        ('severity', 'Severity'),
-        ('component', 'Component'),
-        ('version', 'Distro Version')
-        ]
+    ('priority', 'Priority'),
+    ('status', 'Status'),
+    ('severity', 'Severity'),
+    ('component', 'Component'),
+    ('version', 'Distro Version')
+]
 
 VALID_BUG_STATUSES = ['NEW', 'ASSIGNED', 'MODIFIED', 'ON_QA']
 
@@ -39,6 +39,7 @@ BUG_TABLE = Table('bugs', METADATA,
                   Column('category', String(32), primary_key=True),
                   Column('owned', Integer),
                   Column('unowned', Integer))
+
 
 def get_security_bugs():
     bugzilla = Bugzilla(url='https://bugzilla.redhat.com/xmlrpc.cgi')
@@ -52,10 +53,12 @@ def get_security_bugs():
     buglist = bugzilla.query(query_data)
     return buglist
 
+
 def database(metadata):
     engine = create_engine('sqlite:///sqlite3.db', echo=False)
     metadata.create_all(engine)
     return engine.connect()
+
 
 def build_table(buglist, attribute):
     # Find count of tickets based on our attribute
@@ -76,9 +79,10 @@ def build_table(buglist, attribute):
             str(total),
             str(owned[category][True]),
             str(owned[category][False])
-            ]
+        ]
         table_rows.append(row)
     return table_rows
+
 
 def save_table(table_rows, attribute, connection):
     fields = ['date', 'attribute', 'category', 'owned', 'unowned']
@@ -112,10 +116,11 @@ def draw_table(table_fields, table_rows, limit=None, previous=False):
         headers = [label, 'Tickets', 'Owned', 'Unowned']
     # Generate the table
     if sys.stdout.isatty():
-        return SingleTable(table_data=[headers]+ordered_rows,
+        return SingleTable(table_data=[headers] + ordered_rows,
                            title="Tickets by {0}".format(label)).table
-    return AsciiTable(table_data=[headers]+ordered_rows,
+    return AsciiTable(table_data=[headers] + ordered_rows,
                       title="Tickets by {0}".format(label)).table
+
 
 def draw_header(datadate):
     # Build Report
@@ -130,6 +135,7 @@ def draw_header(datadate):
 -------------------------------------------------------------------------------
 """
     ).format(datestring, datastring)
+
 
 if __name__ == '__main__':
     # pylint: disable=C0103
@@ -156,13 +162,13 @@ if __name__ == '__main__':
         try:
             # parse dates like "2015-09-01"
             readdate = datetime.strptime(datestr, "%Y-%m-%d").date()
-        except ValueError as exeption:
+        except ValueError:
             try:
                 # parse all human readable dates
                 cal = parsedatetime.Calendar()
                 time_struct, parse_status = cal.parse(datestr)
                 readdate = datetime.fromtimestamp(mktime(time_struct)).date()
-            except ValueError as exception:
+            except ValueError:
                 parser.error("could not parse specified date.")
     curdate = date.today()
 
@@ -173,7 +179,7 @@ if __name__ == '__main__':
     if args.cron:
         # Saving bugzilla data to database
         # check if db contains current date - if yes do not collect data
-        sel = select([func.count(BUG_TABLE.c.date).label('dates')]).where(BUG_TABLE.c.date == curdate) # pylint: disable=C0301
+        sel = select(func.count(BUG_TABLE.c.date).label('dates')).where(BUG_TABLE.c.date == curdate)  # pylint: disable=C0301
         if conn.execute(sel).fetchone()[0] == 0:
             bugs = get_security_bugs()
             for table in TABLES:
@@ -203,14 +209,14 @@ if __name__ == '__main__':
             rows = []
             sel = select(
                 [BUG_TABLE.c.category, BUG_TABLE.c.owned, BUG_TABLE.c.unowned]
-                ).where(
-                    and_(
-                        BUG_TABLE.c.date == readdate,
-                        BUG_TABLE.c.attribute == table[0]
-                        )
-                    )
+            ).where(
+                and_(
+                    BUG_TABLE.c.date == readdate,
+                    BUG_TABLE.c.attribute == table[0]
+                )
+            )
             for elem in conn.execute(sel).fetchall():
-                rows.append([elem[0], str(elem[1]+elem[2]), str(elem[1]), str(elem[2])])
+                rows.append([elem[0], str(elem[1] + elem[2]), str(elem[1]), str(elem[2])])
             if table[0] == 'component':
                 # the component table should only show the top 10 versions
                 print(draw_table(table, rows, 10))
