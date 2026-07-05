@@ -208,7 +208,7 @@ if __name__ == '__main__':
             # fetch db table from $readdate
             rows = []
             sel = select(
-                [BUG_TABLE.c.category, BUG_TABLE.c.owned, BUG_TABLE.c.unowned]
+                BUG_TABLE.c.category, BUG_TABLE.c.owned, BUG_TABLE.c.unowned
             ).where(
                 and_(
                     BUG_TABLE.c.date == readdate,
